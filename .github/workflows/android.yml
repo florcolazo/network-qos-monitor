@@ -1,0 +1,57 @@
+# Compila el APK de la app en los servidores de GitHub y lo publica como artefacto descargable.
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+    paths: ['app/**', '.github/workflows/android.yml']
+  workflow_dispatch: # permite lanzarlo a mano desde la pestaña Actions
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Tests y chequeo de tipos
+        run: |
+          npm test
+          npx tsc --noEmit
+
+      # El runner trae el Android SDK; Gradle descarga solo la plataforma, build-tools y NDK que falten.
+      - name: Compilar APK (release, firmado con la clave de debug)
+        working-directory: app/android
+        env:
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a,armeabi-v7a,x86_64 --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: network-qos-monitor-apk
+          path: app/android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 30
