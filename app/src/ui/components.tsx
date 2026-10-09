@@ -11,13 +11,19 @@ import {
 } from 'react-native';
 import { colors, spacing } from './theme';
 
+/**
+ * Tarjeta con título opcional y etiqueta `rf` que indica qué requisito
+ * funcional de la consigna cubre (ej. "RF-02 · Ping a 3 hosts").
+ */
 export function Card({
   title,
+  rf,
   right,
   children,
   style,
 }: {
   title?: string;
+  rf?: string;
   right?: React.ReactNode;
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
@@ -26,7 +32,10 @@ export function Card({
     <View style={[styles.card, style]}>
       {title ? (
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>{title}</Text>
+          <View style={styles.cardHeaderText}>
+            <Text style={styles.cardTitle}>{title}</Text>
+            {rf ? <Text style={styles.rf}>{rf}</Text> : null}
+          </View>
           {right}
         </View>
       ) : null}
@@ -67,7 +76,7 @@ export function Button({
 }) {
   const bg =
     variant === 'primary' ? colors.primary : variant === 'danger' ? colors.danger : colors.primaryLight;
-  const fg = variant === 'secondary' ? colors.primary : '#fff';
+  const fg = variant === 'secondary' ? colors.primaryText : '#fff';
   return (
     <Pressable
       onPress={onPress}
@@ -132,7 +141,9 @@ export const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: spacing.sm,
   },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm },
+  cardHeaderText: { flex: 1, gap: 2 },
+  rf: { fontSize: 12, color: colors.muted },
   cardTitle: { fontSize: 16, fontWeight: '600', color: colors.text },
   row: { flexDirection: 'row', flexWrap: 'wrap', rowGap: spacing.sm },
   stat: { width: '33.33%' },
@@ -173,7 +184,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     color: colors.text,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bg,
   },
   error: { color: colors.danger, fontSize: 13 },
 });

@@ -20,6 +20,13 @@ const DEFAULT_REGION: Region = {
 
 const MAX_MARKERS = 300;
 
+const HEAT_LAYERS = [
+  { min: 80, max: 101, color: qualityColor(90) },
+  { min: 60, max: 80, color: qualityColor(70) },
+  { min: 35, max: 60, color: qualityColor(50) },
+  { min: 0, max: 35, color: qualityColor(10) },
+];
+
 export function MapScreen() {
   const focused = useIsFocused();
   const filter = useQosStore(s => s.filter);
@@ -39,14 +46,16 @@ export function MapScreen() {
     );
   }, [focused, filter, dataVersion]);
 
-  const heatPoints = useMemo(
+  // Una capa de heatmap por nivel de calidad: así el color indica la calidad
+  // (y no la densidad de puntos) y los bordes se desvanecen en vez de verse rojos.
+  const heatLayers = useMemo(
     () =>
-      rows.map(m => ({
-        latitude: m.latitude!,
-        longitude: m.longitude!,
-        // Peso mínimo para que las zonas sin conexión también se vean.
-        weight: Math.max(m.quality, 5),
-      })),
+      HEAT_LAYERS.map(layer => ({
+        ...layer,
+        points: rows
+          .filter(m => m.quality >= layer.min && m.quality < layer.max)
+          .map(m => ({ latitude: m.latitude!, longitude: m.longitude!, weight: 1 })),
+      })).filter(layer => layer.points.length > 0),
     [rows],
   );
 
@@ -79,18 +88,20 @@ export function MapScreen() {
         showsUserLocation
         showsMyLocationButton
         onRegionChangeComplete={setRegion}>
-        {heatPoints.length > 0 ? (
+        {heatLayers.map(layer => (
           <Heatmap
-            points={heatPoints}
+            key={layer.color}
+            points={layer.points}
             radius={40}
-            opacity={0.75}
+            opacity={0.7}
             gradient={{
-              colors: ['#d73027', '#fdae61', '#91cf60', '#1a9850'],
-              startPoints: [0.05, 0.35, 0.6, 0.9],
+              // De transparente al color del nivel: sin halo de otro color.
+              colors: [`${layer.color}00`, layer.color],
+              startPoints: [0.01, 0.5],
               colorMapSize: 256,
             }}
           />
-        ) : null}
+        ))}
         {showMarkers
           ? rows.slice(0, MAX_MARKERS).map(m => (
               <Marker
@@ -105,6 +116,7 @@ export function MapScreen() {
       </MapView>
 
       <View style={[ui.card, local.overlay]}>
+        <Text style={ui.rf}>RF-05 · Heatmap de calidad · RF-09 · Filtros</Text>
         <FilterBar />
         <View style={local.row}>
           <Text style={ui.muted}>

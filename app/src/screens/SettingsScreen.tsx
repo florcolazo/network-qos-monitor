@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Alert, ScrollView, Switch, Text, TextInput, View } from 'react-native';
+import { APP_VERSION } from '../config';
 import { deleteAllMeasurements } from '../db/database';
 import { useQosStore } from '../store/useQosStore';
 import type { Settings } from '../types';
@@ -95,19 +96,19 @@ export function SettingsScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <Card title="Latencia (TCP ping)">
+      <Card title="Latencia (TCP ping)" rf="RF-02 · Al menos 3 hosts configurables">
         <Field label="Hosts (host:puerto, uno por línea, mínimo 3)" value={form.targets} onChangeText={set('targets')} multiline />
         <Field label="Sondas por host" value={form.pingCount} onChangeText={set('pingCount')} numeric />
       </Card>
 
-      <Card title="Backend de throughput">
+      <Card title="Backend de throughput" rf="RF-03 · Servidor de referencia (descarga / subida)">
         <Field label="URL del backend" value={form.backendUrl} onChangeText={set('backendUrl')} />
         <Field label="Tamaño de descarga (MB)" value={form.downloadMb} onChangeText={set('downloadMb')} numeric />
         <Field label="Tamaño de subida (MB)" value={form.uploadMb} onChangeText={set('uploadMb')} numeric />
         <Button title="Probar conexión" variant="secondary" onPress={testBackend} loading={testing} />
       </Card>
 
-      <Card title="Monitoreo">
+      <Card title="Monitoreo" rf="RF-07 · Muestreo periódico y alertas de degradación">
         <Field label="Intervalo de la sesión en primer plano (s)" value={form.sessionIntervalSec} onChangeText={set('sessionIntervalSec')} numeric />
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
           <Text style={styles.text}>Mediciones en segundo plano</Text>
@@ -123,6 +124,7 @@ export function SettingsScreen() {
 
       <Button title="Guardar configuración" onPress={save} />
       <Button title="Borrar historial" variant="danger" onPress={clearHistory} />
+      <Text style={[styles.muted, { textAlign: 'center' }]}>Network QoS Monitor · versión {APP_VERSION}</Text>
     </ScrollView>
   );
 }

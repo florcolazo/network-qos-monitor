@@ -1,5 +1,8 @@
 import type { Settings } from './types';
 
+/** Mantener igual a versionName en android/app/build.gradle. */
+export const APP_VERSION = '0.2.0';
+
 export const DEFAULT_SETTINGS: Settings = {
   pingTargets: [
     { host: '1.1.1.1', port: 443 },

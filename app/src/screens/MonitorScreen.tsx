@@ -65,7 +65,8 @@ export function MonitorScreen() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Card
-        title="Red activa"
+        title="Tipo de conexión activa"
+        rf="RF-01 · Red, operador y señal (módulo nativo TelephonyManager)"
         right={isCellular ? <SignalBars level={network?.signalLevel ?? null} /> : null}>
         <Text style={{ fontSize: 22, fontWeight: '700', color: colors.text }}>
           {network ? CONNECTION_TEXT[network.connectionType] : '…'}
@@ -99,7 +100,7 @@ export function MonitorScreen() {
         ) : null}
       </Card>
 
-      <Card title="Medición">
+      <Card title="Medición de QoS" rf="RF-02 · RF-03 · RF-04 · Ping, throughput y GPS en una sola pasada">
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <Button title="Test completo" onPress={() => measure(true)} loading={running} disabled={monitoring} />
           <Button
@@ -122,6 +123,7 @@ export function MonitorScreen() {
       {last ? (
         <Card
           title={`Última medición · ${new Date(last.timestamp).toLocaleTimeString('es-AR')}`}
+          rf="RF-02 Latencia · RF-03 Throughput · RF-04 Georreferenciación"
           right={
             <QualityBadge
               score={last.quality}
@@ -138,6 +140,8 @@ export function MonitorScreen() {
             <Stat label="GPS" value={last.latitude !== null ? `±${Math.round(last.accuracy ?? 0)}` : null} unit="m" />
             <Stat label="Descarga" value={last.downloadMbps} unit="Mbps" />
             <Stat label="Subida" value={last.uploadMbps} unit="Mbps" />
+            <Stat label="Latitud" value={last.latitude?.toFixed(5)} />
+            <Stat label="Longitud" value={last.longitude?.toFixed(5)} />
           </Row>
 
           <Text style={[styles.cardTitle, { fontSize: 14, marginTop: 8 }]}>Detalle por host</Text>

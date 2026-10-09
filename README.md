@@ -26,6 +26,8 @@ Trabajo Práctico 01 — Desarrollo de Aplicaciones Móviles 2026 — Licenciatu
 | RF-08 | Exportar a CSV/JSON | Botones en **Historial** (`src/services/export.ts`) |
 | RF-09 | Filtros por tipo de red, fecha y zona | `FilterBar` + botón «Filtrar historial por esta zona» en **Mapa** |
 
+Además, la pestaña **Analítica** resume el historial filtrado: promedios por tipo de red y por operador, distribución de calidad y la mejor y peor medición (`src/engine/analytics.ts`). En la app, cada tarjeta indica con una etiqueta qué requisito (RF-xx) cubre.
+
 ---
 
 ## 2. Arquitectura
@@ -34,7 +36,7 @@ Arquitectura en capas, como propone la consigna:
 
 ```
 ┌───────────────────────── Presentation ─────────────────────────┐
-│  screens/ Monitor · Mapa · Historial · Ajustes     ui/ (componentes, gráfico) │
+│  screens/ Monitor · Mapa · Historial · Analítica · Ajustes   ui/ │
 └───────────────▲───────────────────────────────────────────────┘
                 │ estado reactivo (Zustand: store/useQosStore.ts)
 ┌───────────────┴──────────── Measurement Engine ────────────────┐
@@ -90,17 +92,23 @@ Se registra en `MainApplication.kt` mediante `TelephonyPackage`. Con la *New Arc
 
 **Sin bloquear la UI.** Sockets, descargas, GPS y SQLite son operaciones nativas asíncronas: el hilo de JS sólo recibe los resultados. El estado se publica en un store **Zustand** y las pantallas se suscriben sólo a lo que usan.
 
-### 2.3 Sesiones
+### 2.3 Interfaz
+
+- Tema oscuro y cinco pestañas: Monitor, Mapa, Historial, Analítica y Ajustes.
+- **Heatmap**: se dibuja una capa por nivel de calidad (Excelente, Buena, Regular, Mala), cada una de su color y con bordes que se desvanecen. Así el color indica la calidad medida y no la cantidad de puntos acumulados.
+- La versión de la app se muestra al pie de **Ajustes** y coincide con `versionName` del APK.
+
+### 2.4 Sesiones
 
 - **Test completo / Sólo latencia**: hace una medición. Las mediciones manuales se agrupan en una sesión «Manual dd/mm hh:mm».
 - **Iniciar sesión**: mide cada N segundos (30 por defecto) mientras la app está abierta y agrupa todo en una sesión. Los gráficos del historial se pueden ver por sesión.
 - Las mediciones en **segundo plano** se agrupan en una sesión «Background dd/mm/aaaa» por día.
 
-### 2.4 Background y notificaciones
+### 2.5 Background y notificaciones
 
 `react-native-background-fetch` corre cada ≥ 15 min (es el mínimo que permite el sistema) con `stopOnTerminate: false` y `enableHeadless: true`. Con la app cerrada, Android ejecuta la *headless task* registrada en `index.js`. Cada ejecución hace una medición liviana (red + GPS + ping, sin throughput, para no gastar datos). Si el RTT o la pérdida superan los umbrales configurados, o no hay conexión, muestra una notificación local con **Notifee**.
 
-### 2.5 Persistencia
+### 2.6 Persistencia
 
 SQLite mediante `@op-engineering/op-sqlite`. Tablas:
 
@@ -193,6 +201,5 @@ npx tsc --noEmit
 - **TCP ping vs ICMP**: el RTT incluye el handshake TCP y una pequeña sobrecarga del puente nativo→JS (≈1 ms). Algunos hosts o firewalls pueden limitar conexiones repetidas.
 - **Throughput**: es una única conexión HTTP, no varias en paralelo como Speedtest, así que en enlaces muy rápidos puede subestimar la capacidad. El resultado depende de dónde esté desplegado el backend.
 - **Background**: Android decide cuándo ejecutar las tareas (Doze, App Standby, restricciones del fabricante). El intervalo mínimo es de 15 min y puede ser mayor. Algunos fabricantes (Xiaomi, Huawei, Samsung) matan las tareas si no se desactiva la optimización de batería para la app.
-- **Heatmap**: la intensidad combina la densidad de puntos con el peso (calidad). Una zona con muchas mediciones regulares puede verse "más caliente" que un punto aislado excelente. Por eso también se muestran marcadores coloreados con el valor exacto.
 - **Exportar en Android**: el archivo se guarda en *Descargas* (o en la carpeta externa de la app si no hay acceso). El diálogo de compartir envía el contenido como texto.
 - **Mapa**: necesita una clave de Google Maps válida. Sin ella el mapa se ve gris, aunque los datos se siguen guardando.

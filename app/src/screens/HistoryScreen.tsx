@@ -80,12 +80,12 @@ export function HistoryScreen() {
 
   const header = (
     <View style={{ gap: 12, marginBottom: 12 }}>
-      <Card title="Filtros">
+      <Card title="Filtros" rf="RF-09 · Tipo de red, fecha, zona y sesión">
         <FilterBar />
         <Chips options={sessionOptions} value={filter.sessionId} onChange={sessionId => setFilter({ sessionId })} />
       </Card>
 
-      <Card title="Latencia">
+      <Card title="Latencia" rf="RF-06 · Serie temporal de RTT y jitter">
         <TimeSeriesChart
           data={latencyData}
           unit="ms"
@@ -96,7 +96,7 @@ export function HistoryScreen() {
         />
       </Card>
 
-      <Card title="Throughput">
+      <Card title="Throughput" rf="RF-06 · Descarga y subida por medición">
         <TimeSeriesChart
           data={throughputData}
           unit="Mbps"
@@ -107,7 +107,7 @@ export function HistoryScreen() {
         />
       </Card>
 
-      <Card title={`Mediciones (${rows.length})`}>
+      <Card title={`Mediciones (${rows.length})`} rf="RF-04 · Historial · RF-08 · Exportar CSV/JSON">
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <Button title="Exportar CSV" variant="secondary" onPress={() => doExport('csv')} disabled={!rows.length} loading={exporting} />
           <Button title="Exportar JSON" variant="secondary" onPress={() => doExport('json')} disabled={!rows.length} loading={exporting} />
